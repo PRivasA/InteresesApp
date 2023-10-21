@@ -27,9 +27,10 @@ import com.example.interesesapp.components.SpaceH
 import java.math.BigDecimal
 import java.math.RoundingMode
 import androidx.compose.ui.graphics.Color
+import com.example.interesesapp.viewmodels.PrestamoViewModel
 
 @Composable
-fun ContentHomeView(paddingValues: PaddingValues){
+fun ContentHomeView(paddingValues: PaddingValues, viewModel: PrestamoViewModel){
     Column(
         modifier = Modifier
             .padding(paddingValues)
@@ -45,50 +46,43 @@ fun ContentHomeView(paddingValues: PaddingValues){
         var montoCuota by remember { mutableStateOf(0.0)}
         var showAlert by remember { mutableStateOf(false)}
 
+        val state=viewModel.state
+
         ShowInfoCard(
             titleInteres = "Total: ",
-            montoInteres = montoInteres,
+            montoInteres = state.montoIntereses,
             titleMonto = "Cuota: ",
-            monto = montoCuota
+            monto = state.montoCuota
         )
-        MainTextField(value = montoPrestamo, onValueChange = { montoPrestamo = it}, label = "Prestamo" )
+        MainTextField(value = state.montoPrestamo,
+            onValueChange = { viewModel.onValue(value = it, campo = "montoPrestamo")}, label = "Prestamo" )
         SpaceH()
-        MainTextField(value = cantCuotas, onValueChange = {cantCuotas = it}, label = "Cuotas")
+        MainTextField(value = state.cantCuotas,
+            onValueChange = {viewModel.onValue(value = it, campo = "cuotas")}, label = "Cuotas")
         SpaceH(10.dp)
-        MainTextField(value = tasa, onValueChange = {tasa = it}, label = "Tasa")
+        MainTextField(value = state.tasa,
+            onValueChange = {viewModel.onValue(value = it, campo = "tasa")}, label = "Tasa")
         SpaceH(10.dp)
 
-        MainButton(text = "Calcular", color= MaterialTheme.colorScheme.inversePrimary){
-            if(montoPrestamo != "" && cantCuotas != ""){
-                montoInteres = calcularTotal(montoPrestamo.toDouble(),
-                    cantCuotas.toInt(), tasa.toDouble())
-
-                montoCuota = calcularCuota(montoPrestamo.toDouble(),
-                    cantCuotas.toInt(), tasa.toDouble())
-            }else{
-                showAlert = true
-            }
+        MainButton(text = "Calcular"){
+            viewModel.calcular()
         }
         SpaceH()
         MainButton(text = "Limpiar", color = Color.Red) {
-            montoPrestamo = ""
-            cantCuotas = ""
-            tasa = ""
-            montoInteres = 0.0
-            montoCuota = 0.0
+            viewModel.Limpiar()
         }
-        if(showAlert){
+        if(viewModel.state.showAlert){
             Alert(title = "Alerta",
                 message = "Ingresa los datos",
                 confirmText = "Aceptar",
-                onConfirmClick = { showAlert = false}){}
+                onConfirmClick = { viewModel.confirmDialog() }){}
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeView(){
+fun HomeView(viewModel: PrestamoViewModel){
     Scaffold( topBar = {
         CenterAlignedTopAppBar(
             title = { Text(text = "Calculadora Prestamos", color = Color.White)},
@@ -97,7 +91,7 @@ fun HomeView(){
             )
         )
     }){
-        ContentHomeView(it)
+        ContentHomeView(it, viewModel)
     }
 }
 
